@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 
-# Virtual Environment
+# Virtual environment
 .venv/
 
 # Jupyter
@@ -20,5 +20,5 @@ models/*
 !data/processed/.gitkeep
 !models/.gitkeep
 
-# Mac
+# macOS
 .DS_Store

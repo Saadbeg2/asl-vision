@@ -1,123 +1,105 @@
 # ASL Vision
 
-Real-time American Sign Language (ASL) character recognition system using deep learning, transfer learning, and computer vision.
+ASL Vision is a computer vision portfolio project for classifying ASL letters and digits (`A-Z`, `0-9`) using TensorFlow + MobileNetV2, with both static image inference and real-time webcam inference.
 
----
+![Training Accuracy](assets/images/training_accuracy_curve.png)
 
-# Project Goal
+## Architecture Overview
+- `src/data_loader.py`: dataset loading + augmentation
+- `src/train.py`: model build/compile/train/save
+- `src/evaluate.py`: deterministic evaluation + artifact export
+- `src/inference.py`: reusable frame/image inference helpers
+- `src/webcam_inference.py`: webcam loop with overlays and graceful errors
+- `src/system_check.py`: environment/runtime checks
+- `run_train.py`: train + evaluate + optional artifact export
+- `run_webcam.py`: real-time webcam inference entrypoint
 
-The goal of this project is to build a real-time ASL recognition system capable of recognizing:
-- A–Z hand signs
-- 0–9 digits
+## Model Overview
+- Backbone: `MobileNetV2` (`imagenet` weights, transfer learning)
+- Input: `224x224x3`
+- Classes: `36` total (`0-9`, `a-z`)
+- Loss: `sparse_categorical_crossentropy`
+- Optimizer: `Adam`
+- Preprocessing: `mobilenet_v2.preprocess_input` (inside model graph)
 
-from webcam input using deep learning and computer vision techniques.
+## Results
+- Validation accuracy: ~`85%` (v1 baseline)
+- Deterministic evaluation pipeline (batch-aligned labels/predictions)
 
-The system is designed as a practical accessibility-focused AI application combining:
-- image classification
-- transfer learning
-- real-time inference
-- webcam integration
+![Training Loss](assets/images/training_loss_curve.png)
+![Confusion Matrix](assets/images/confusion_matrix.png)
 
----
+## Demo
+### Static Inference
+Run single-image prediction:
 
-# Planned Features
+```bash
+python -m src.test_inference --image path/to/image.jpg --model-path models/asl_mobilenetv2.keras --class-names models/class_names.json
+```
 
-- ASL image classification
-- Transfer learning with MobileNetV2
-- Real-time webcam predictions
-- OpenCV integration
-- Prediction confidence scoring
-- Confusion matrix evaluation
-- Live demo interface
+Example artifact:
 
----
+![Static Inference Example](assets/images/static_inference_example.png)
 
-# Project Roadmap
+### Webcam Inference
+Run real-time inference:
 
-## Phase 1 — Project Setup
-- repository initialization
-- environment setup
-- folder structure
-- dependency management
+```bash
+python run_webcam.py --model-path models/asl_mobilenetv2.keras --class-names models/class_names.json --camera-index 0
+```
 
-## Phase 2 — Dataset Exploration
-- inspect class distributions
-- visualize image samples
-- analyze image dimensions
-- preprocessing strategy
+Expected behavior:
+- live top prediction + confidence overlay
+- top-k predictions
+- optional FPS display
+- press `q` to quit
 
-## Phase 3 — Data Preprocessing
-- image resizing
-- normalization
-- train/validation split
-- data augmentation
+## Setup
+```bash
+pip install -r requirements.txt
+```
 
-## Phase 4 — Model Training
-- MobileNetV2 transfer learning
-- baseline model training
-- validation monitoring
-- hyperparameter tuning
-
-## Phase 5 — Model Evaluation
-- accuracy/loss visualization
-- confusion matrix
-- misclassification analysis
-- prediction inspection
-
-## Phase 6 — Real-Time Inference
-- webcam integration
-- live frame preprocessing
-- real-time predictions
-- confidence overlays
-
-## Phase 7 — Project Finalization
-- README polishing
-- architecture diagrams
-- demo screenshots/GIFs
-- GitHub optimization
-
----
-
-# Planned Tech Stack
-
-- Python
-- TensorFlow / Keras
-- OpenCV
-- NumPy
-- Pandas
-- Matplotlib
-- Scikit-learn
-- Jupyter Notebook
-
----
-
-# Repository Structure
+Dataset path expected by default:
 
 ```text
-asl-vision/
-│
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── README.md
-│
-├── notebooks/
-│
-├── src/
-│   ├── config.py
-│   ├── data_loader.py
-│   ├── preprocessing.py
-│   ├── train.py
-│   ├── evaluate.py
-│   ├── inference.py
-│   └── webcam_app.py
-│
-├── models/
-├── reports/
-├── assets/
-│
-├── requirements.txt
-├── .gitignore
-├── README.md
-└── LICENSE
+data/raw/asl_dataset/
 ```
+
+Quick runtime check:
+
+```bash
+python -c "from src.system_check import run_system_check; run_system_check()"
+```
+
+## Training
+Train and evaluate:
+
+```bash
+python run_train.py --epochs 10
+```
+
+Export artifacts (confusion matrix/report/training curves) to `assets/images/`:
+
+```bash
+python run_train.py --epochs 10 --save-artifacts
+```
+
+## Troubleshooting (macOS Webcam)
+If webcam window fails or does not render:
+1. Grant camera access to Terminal/VS Code in macOS Privacy settings.
+2. Close other apps that may lock the webcam.
+3. Try another index: `--camera-index 1`.
+4. Run from a local GUI session (not remote/headless terminal).
+
+## Notebooks
+- `notebooks/03_model_training.ipynb`: training walkthrough and visual analysis
+- `notebooks/05_webcam_inference.ipynb`: lightweight webcam run notes
+
+## Roadmap (Post-v1)
+- fine-tuning stage (partial unfreeze)
+- improved hand ROI extraction for webcam robustness
+- additional dataset balancing and error analysis
+
+## Scope Notes
+This v1 project is **character-level image classification**.
+It does **not** perform word-level ASL translation, temporal sequence modeling, or sentence understanding.

@@ -1,0 +1,5 @@
+Pred: a (64.8%)
+1. a: 64.8%
+2. t: 12.2%
+3. s: 8.0%
+source_image=data/raw/asl_dataset/a/hand1_a_bot_seg_1_cropped.jpeg
